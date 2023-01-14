@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class ='chat' >
+    <div class = 'chat-messages'>
+        <div class ='chat-messages_content' id='messages'>
+            Загрузка...
+        </div>
+    </div>
+    <div class = 'chat-input'>
+        <form method="POST" id='chat-form'>
+            <input type="text" id="message-text" placeholder="Введите сообщение" class = 'chat-form__input'> <input class="btn btn-primary" type="submit" value="=>">
+        </form>
+    </div>
+    </div>
+    <script type="text/javascript">
+        var messages__container = document.getElementById('messages'); // контейнер сообщений
+
+var interval = null; // Интервал подгрузки сообщений
+
+var sendForm = document.getElementById('chat-form'); // Форма отправки
+
+var messageInput = document.getElementById('message-text'); // Инпут для текста сообщения
+
+var chatUrl = new URL(window.location.href);
+
+var chatID = chatUrl.searchParams.get('id');
+
+var login = prompt("Введите логин");
+function send_request(act, login=null){
+    //Переменные, которые будем отправлять
+    var var1 = null;
+
+    switch(act){
+        default: break;
+        case 'auth':
+            var1 = login;
+            break;
+        case 'send':
+            var1 = messageInput.value;
+            break;
+                }
+    $.post('chat.php',{ //Отправляем переменные
+        act: act,
+        var1: var1,
+        login: login,
+        id: chatID
+    }).done(function (data) {
+        //Заносим в контейнер ответ от сервера
+        messages__container.innerHTML = data;
+        if(act == 'auth'){
+            interval = setInterval(update, 500);
+        }
+        if(act == 'send') {
+            //Если нужно было отправить сообщение, очищаем поле ввода
+            messageInput.value = '';
+        }
+    });
+}
+
+function update(){
+    send_request('load');
+}
+interval = setInterval(update, 500);
+
+sendForm.onsubmit = function() {
+    send_request('send', login);
+    return false;
+}
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+</body>
+</html>
